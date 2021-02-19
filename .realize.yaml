@@ -1,0 +1,25 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+schema:
+  - name: gqlgen-api-starter
+    path: cmd/gqlgen-api-starter
+    args:
+      - run
+    commands:
+      install:
+        status: true
+        method: go build -o build/gqlgen-api-starter
+      run:
+        status: true
+        method: build/gqlgen-api-starter
+    watcher:
+      extensions:
+        - go
+      paths:
+        - ../../
+      ignored_paths:
+        - .git
+        - .realize
+        - vendor

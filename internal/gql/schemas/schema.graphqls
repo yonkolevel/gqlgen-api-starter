@@ -1,0 +1,25 @@
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+}
+
+input ProductInput {
+  name: String!
+  price: Float!
+}
+
+type Query {
+  products(
+    id: ID
+    filters: [QueryFilter]
+    limit: Int = 50
+    offset: Int = 0
+    orderBy: String = "id"
+    sortDirection: String = "ASC"
+  ): [Product!]!
+}
+
+type Mutation {
+  createProduct(input: ProductInput!): Product!
+}

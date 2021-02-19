@@ -1,0 +1,117 @@
+#Scalars
+scalar Time
+# Any maps to interface{}
+scalar Any
+
+# Enums
+enum LinkOperationType {
+  AND
+  OR
+}
+
+enum OperationType {
+  Equals
+  NotEquals
+  LessThan
+  LessThanEqual
+  GreaterThan
+  GreaterThanEqual
+  Is
+  IsNull
+  IsNotNull
+  In
+  NotIn
+  Like
+  ILike
+  NotLike
+  Between
+  Match
+}
+
+# Types
+type User {
+  id: ID!
+  email: String!
+  avatarURL: String
+  name: String
+  firstName: String
+  lastName: String
+  nickName: String
+  description: String
+  location: String
+  APIkey: String
+  profiles(limit: Int = 10, offset: Int = 0): [UserProfile!]!
+  createdBy: User
+  updatedBy: User
+  createdAt: Time
+  updatedAt: Time
+}
+
+type UserProfile {
+  id: Int!
+  email: String!
+  externalUserId: String
+  avatarURL: String
+  name: String
+  firstName: String
+  lastName: String
+  nickName: String
+  description: String
+  location: String
+  createdAt: Time!
+  updatedAt: Time
+  createdBy: User
+  updatedBy: User
+}
+
+# Input Types
+
+input QueryFilter {
+  field: String!
+  linkOperation: LinkOperationType = AND
+  op: OperationType!
+  value: Any
+  values: [Any!]
+}
+
+input UserInput {
+  email: String
+  password: String
+  avatarURL: String
+  displayName: String
+  name: String
+  firstName: String
+  lastName: String
+  nickName: String
+  description: String
+  location: String
+  addRoles: [ID]
+  remRoles: [ID]
+  addPermissions: [ID]
+  remPermissions: [ID]
+}
+
+# List Types
+type Users {
+  count: Int
+  list: [User!]!
+}
+
+# Define mutations here
+extend type Mutation {
+  createUser(input: UserInput!): User!
+  updateUser(id: ID!, input: UserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}
+
+# Define queries here
+extend type Query {
+  users(
+    id: ID
+    filters: [QueryFilter]
+    limit: Int = 50
+    offset: Int = 0
+    orderBy: String = "id"
+    sortDirection: String = "ASC"
+  ): Users!
+}

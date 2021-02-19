@@ -1,0 +1,9 @@
+
+
+build/
+
+cmd/gqlgen-api-starter/__debug_bin
+.env
+cmd/midicircuit-api/__debug_bin
+internal/gql/generated/generated.go
+internal/gql/model/models_gen.go
