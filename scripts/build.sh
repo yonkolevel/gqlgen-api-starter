@@ -3,7 +3,7 @@ srcPath="cmd"
 pkgFile="main.go"
 outputPath="build"
 app="gqlgen-api-starter"
-output="$outputPath"
+output="$outputPath/$app"
 src="$srcPath/$app/$pkgFile"
 
 printf "\nBuilding: $app\n"
