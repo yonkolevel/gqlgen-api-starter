@@ -6,8 +6,8 @@ import (
 	"context"
 
 	"github.com/txbrown/gqlgen-api-starter/internal/logger"
-	"github.com/txbrown/gqlgen-api-starter/internal/orm"
 	"github.com/txbrown/gqlgen-api-starter/internal/orm/models"
+	"github.com/txbrown/gqlgen-api-starter/internal/services"
 	"github.com/txbrown/gqlgen-api-starter/pkg/utils"
 )
 
@@ -16,7 +16,7 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	ORM *orm.ORM
+	Services *services.Services
 }
 
 func getCurrentUser(ctx context.Context) *models.User {

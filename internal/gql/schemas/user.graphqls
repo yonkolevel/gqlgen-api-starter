@@ -1,8 +1,3 @@
-#Scalars
-scalar Time
-# Any maps to interface{}
-scalar Any
-
 # Enums
 enum LinkOperationType {
   AND
@@ -45,6 +40,7 @@ type User {
   updatedBy: User
   createdAt: Time
   updatedAt: Time
+  token: String
 }
 
 type UserProfile {
@@ -62,6 +58,11 @@ type UserProfile {
   updatedAt: Time
   createdBy: User
   updatedBy: User
+}
+
+type SignInResponse {
+  token: String!
+  user: User!
 }
 
 # Input Types
@@ -91,6 +92,29 @@ input UserInput {
   remPermissions: [ID]
 }
 
+input BasicUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  id: String!
+}
+
+input SignInWithAppleInput {
+  authCode: String!
+  idToken: String!
+  userData: BasicUserInput!
+}
+
+input CreateUserAccountInput {
+  email: String!
+  password: String!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
 # List Types
 type Users {
   count: Int
@@ -101,7 +125,11 @@ type Users {
 extend type Mutation {
   createUser(input: UserInput!): User!
   updateUser(id: ID!, input: UserInput!): User!
+  updateUserProfile(input: UserInput!): User!
   deleteUser(id: ID!): Boolean!
+  signInWithApple(input: SignInWithAppleInput!): SignInResponse!
+  createUserAccount(input: CreateUserAccountInput!): User!
+  signIn(input: SignInInput!): SignInResponse!
 }
 
 # Define queries here

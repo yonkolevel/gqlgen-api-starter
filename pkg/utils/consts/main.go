@@ -26,11 +26,17 @@ type entitynames struct {
 	UserPermissions string
 	UserProfiles    string
 	UserRoles       string
-	Menu            string
-	MenuItem        string
-	City            string
-	Country         string
-	Location        string
+	Pack            string
+	Circuit         string
+	Lesson          string
+	File            string
+	PackDetails     string
+	PackReview      string
+	PackActivity    string
+	Category        string
+	Feedback        string
+	Trophy          string
+	UserAPIKeys     string
 }
 
 type role struct {
@@ -41,6 +47,10 @@ type role struct {
 type dialects struct {
 	PostgresSQL string
 	MySQL       string
+}
+
+type authProviders struct {
+	DB string
 }
 
 var (
@@ -64,11 +74,17 @@ var (
 		UserPermissions: "UserPermissions",
 		UserProfiles:    "UserProfiles",
 		UserRoles:       "UserRoles",
-		Menu:            "Menus",
-		MenuItem:        "MenuItems",
-		City:            "Cities",
-		Country:         "Countries",
-		Location:        "Locations",
+		Pack:            "Packs",
+		Circuit:         "Circuits",
+		Lesson:          "Lessons",
+		File:            "Files",
+		PackDetails:     "PackDetails",
+		Category:        "Categories",
+		PackReview:      "PackReviews",
+		PackActivity:    "PackActivities",
+		Feedback:        "Feedbacks",
+		Trophy:          "Trophies",
+		UserAPIKeys:     "UserAPIKeys",
 	}
 	// Dialects are definition of databases
 	Dialects = dialects{
@@ -87,6 +103,13 @@ var (
 			Description: "Normal user of the app",
 		},
 	}
+
+	// Providers
+	Providers = authProviders{
+		DB: "db",
+	}
+
+	NestedFmt = "%s.%s"
 )
 
 // GetTableName gets the db normalized tablename

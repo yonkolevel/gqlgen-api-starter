@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/txbrown/gqlgen-api-starter/internal/logger"
-	"github.com/txbrown/gqlgen-api-starter/internal/orm"
+	"github.com/txbrown/gqlgen-api-starter/internal/services"
 	"github.com/txbrown/gqlgen-api-starter/pkg/utils"
 
 	"github.com/gin-gonic/gin"
@@ -18,24 +19,36 @@ func authError(c *gin.Context, err error) {
 	c.AbortWithStatusJSON(http.StatusUnauthorized, e)
 }
 
+func getTokenFromAuthorizationHeader(headers http.Header) string {
+	token := ""
+
+	if hValues := strings.Split(headers.Get("Authorization"), " "); len(hValues) > 1 {
+		token = hValues[1]
+	}
+
+	return token
+}
+
 // Middleware wraps the request with auth middleware
-func Middleware(path string, cfg *utils.ServerConfig, orm *orm.ORM) gin.HandlerFunc {
+func Middleware(path string, cfg *utils.ServerConfig, us services.UsersService) gin.HandlerFunc {
 	logger.Info("[Auth.Middleware] Applied to path: ", path)
 	return gin.HandlerFunc(func(c *gin.Context) {
 		if a, err := ParseAPIKey(c, cfg); err == nil {
-			user, err := orm.FindUserByAPIKey(a)
+			user, err := us.FindUserByAPIKey(a)
 			if err != nil {
 				logger.Info("fails here 1")
 				logger.Info(err)
 				authError(c, ErrForbidden)
 			}
 			c.Request = addToContext(c, utils.ProjectContextKeys.UserCtxKey, user)
-			logger.Info("User: ", user.ID)
+			if user != nil {
+				logger.Info("User: ", user.ID)
+			}
 			c.Next()
 		} else {
 			if err != ErrEmptyAPIKeyHeader {
 				authError(c, err)
-			} else {
+			} else if token := getTokenFromAuthorizationHeader(c.Request.Header); token != "" {
 				t, err := ParseToken(c, cfg)
 				if err != nil {
 					authError(c, err)
@@ -55,7 +68,7 @@ func Middleware(path string, cfg *utils.ServerConfig, orm *orm.ORM) gin.HandlerF
 								logger.Warnf("\n\nalgo: %s\n\n", algo)
 							}
 							// TODO: Verify token with each provider's JWKs
-							if user, err := orm.FindUserByJWT(email, issuer, userid); err != nil {
+							if user, err := us.FindUserByJWT(email, issuer, userid); err != nil {
 								logger.Info("fails here 2")
 								logger.Info(err)
 								authError(c, ErrForbidden)
@@ -70,6 +83,8 @@ func Middleware(path string, cfg *utils.ServerConfig, orm *orm.ORM) gin.HandlerF
 						authError(c, err)
 					}
 				}
+			} else {
+				c.Next()
 			}
 		}
 	})
