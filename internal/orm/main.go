@@ -3,17 +3,13 @@
 package orm
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
-	"github.com/markbates/goth"
-	"github.com/txbrown/gqlgen-api-starter/internal/gql/transformations"
+	"github.com/DATA-DOG/go-sqlmock"
 	log "github.com/txbrown/gqlgen-api-starter/internal/logger"
 	"github.com/txbrown/gqlgen-api-starter/internal/orm/migration"
-	"github.com/txbrown/gqlgen-api-starter/internal/orm/models"
 	"github.com/txbrown/gqlgen-api-starter/pkg/utils"
-	"github.com/txbrown/gqlgen-api-starter/pkg/utils/consts"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -21,13 +17,10 @@ import (
 
 var (
 	sUserTbl  = "User"
+	packTbl   = "Pack"
+	fileTbl   = "File"
 	nestedFmt = "%s.%s"
 )
-
-// ORM struct to holds the gorm pointer to db
-type ORM struct {
-	DB *gorm.DB
-}
 
 // func init() {
 // 	dialect = utils.MustGet("GORM_DIALECT")
@@ -38,7 +31,7 @@ type ORM struct {
 // }
 
 // New creates a db connection with the selected dialect and connection string
-func New(cfg *utils.ServerConfig) (*ORM, error) {
+func NewDB(cfg *utils.ServerConfig) (*gorm.DB, error) {
 	newLogger := logger.New(
 		log.NewLogger(), // io writer
 		logger.Config{
@@ -54,76 +47,43 @@ func New(cfg *utils.ServerConfig) (*ORM, error) {
 	if err != nil {
 		log.Panic("[ORM] err: ", err)
 	}
-	orm := &ORM{
-		DB: db,
-	}
 
 	// Automigrate tables
 	if cfg.Database.AutoMigrate {
-		err = migration.ServiceAutoMigration(orm.DB)
+		err = migration.ServiceAutoMigration(db)
 	}
 	log.Info("[ORM] Database connection initialized.")
-	return orm, err
+	return db, err
 }
 
-//FindUserByAPIKey finds the user that is related to the API key
-func (o *ORM) FindUserByAPIKey(apiKey string) (*models.User, error) {
-	if apiKey == "" {
-		return nil, errors.New("API key is empty")
-	}
-	uak := &models.UserAPIKey{}
-	up := fmt.Sprintf(nestedFmt, sUserTbl, consts.EntityNames.Permissions)
-	ur := fmt.Sprintf(nestedFmt, sUserTbl, consts.EntityNames.Roles)
-	if err := o.DB.Preload(sUserTbl).Preload(up).Preload(ur).
-		Where("api_key = ?", apiKey).Find(uak).Error; err != nil {
-		return nil, err
-	}
-	return &uak.User, nil
-}
+func NewDBMock(cfg *utils.ServerConfig) (*gorm.DB, sqlmock.Sqlmock, error) {
 
-// FindUserByJWT finds the user that is related to the APIKey token
-func (o *ORM) FindUserByJWT(email string, provider string, userID string) (*models.User, error) {
-	if provider == "" || userID == "" {
-		return nil, errors.New("provider or userId empty")
-	}
-	tx := o.DB.Begin()
-	p := &models.UserProfile{}
-	up := fmt.Sprintf(nestedFmt, sUserTbl, consts.EntityNames.Permissions)
-	ur := fmt.Sprintf(nestedFmt, sUserTbl, consts.EntityNames.Roles)
-	if err := tx.Preload(sUserTbl).Preload(up).Preload(ur).
-		Where("email  = ? AND provider = ? AND external_user_id = ?", email, provider, userID).
-		First(p).Error; err != nil {
-		return nil, err
-	}
-	return &p.User, nil
-}
+	db, mock, err := sqlmock.New()
 
-// UpsertUserProfile saves the user if doesn't exists and adds the OAuth profile
-func (o *ORM) UpsertUserProfile(input *goth.User) (*models.User, error) {
-	db := o.DB
-	u := &models.User{}
-	up := &models.UserProfile{}
-	u, err := transformations.GothUserToDBUser(input, false)
+	newLogger := logger.New(
+		log.NewLogger(), // io writer
+		logger.Config{
+			SlowThreshold: time.Second,   // Slow SQL threshold
+			LogLevel:      logger.Silent, // Log level
+			Colorful:      false,         // Disable color
+		},
+	)
+
+	dialector := postgres.New(postgres.Config{
+		// DSN:                  "sqlmock_db_0",
+		// DriverName:           "postgres",
+		Conn: db,
+		// PreferSimpleProtocol: true,
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{
+		Logger: newLogger,
+	})
+
 	if err != nil {
-		return nil, err
+		log.Panic("[ORM] err: ", err)
 	}
-	if tx := db.Where("email = ?", input.Email).First(u); tx.Error != nil && tx.Error != gorm.ErrRecordNotFound {
-		return nil, tx.Error
-	}
-	if tx := db.Model(u).Save(u); tx.Error != nil {
-		return nil, err
-	}
-	if tx := db.Where("email = ? AND provider = ? AND external_user_id = ?",
-		input.Email, input.Provider, input.UserID).First(up); tx.Error != gorm.ErrRecordNotFound && tx.Error != nil {
-		return nil, err
-	}
-	up, err = transformations.GothUserToDBUserProfile(input, false)
-	if err != nil {
-		return nil, err
-	}
-	up.User = *u
-	if tx := db.Model(up).Save(up); tx.Error != nil {
-		return nil, tx.Error
-	}
-	return u, nil
+
+	log.Info("[ORM] Database connection initialized.")
+	return gormDB, mock, err
 }

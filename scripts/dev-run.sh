@@ -1,6 +1,10 @@
 #!/bin/sh
-app="gqlgen-api-starter"
+GO111MODULE=on
 
+
+app="gqlgen-api-starter"
+srcPath="cmd"
+pkgFile="main.go"
 src="$srcPath/$app/$pkgFile"
 
 printf "\nStart running: $app\n"

@@ -1,3 +1,9 @@
+#Scalars
+scalar Time
+scalar Upload
+# Any maps to interface{}
+scalar Any
+
 type Product {
   id: ID!
   name: String!
