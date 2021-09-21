@@ -1,0 +1,23 @@
+version: '3'
+
+env:
+  ENV: testing
+
+dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+
+tasks:
+  setup:
+    cmds:
+      - ./scripts/gqlgen.sh
+      - ./scripts/build.sh
+  install:
+    cmds:
+      - go build -o build/gqlgen-api-starter
+  dev:
+    cmds:
+      - go run cmd/gqlgen-api-starter/main.go
+    sources:
+      - ./**/*.go
+  run:
+    cmds:
+      - go run build/gqlgen-api-starter

@@ -29,7 +29,6 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Produc
 }
 
 func (r *queryResolver) Products(ctx context.Context, id *string, filters []*model.QueryFilter, limit *int, offset *int, orderBy *string, sortDirection *string) ([]*model.Product, error) {
-
 	dbRecords, err := r.Services.ProductsService.Products(id, filters, limit, offset, orderBy, sortDirection)
 
 	if err != nil {
