@@ -25,8 +25,6 @@ docker run -p 5433:5432 --name gqlgen-api-starter-db -e POSTGRES_PASSWORD=passwo
 - Request the secrets to a member of the team
 
 ```bash
-go get
-
 ./scripts/gqlgen.sh
 
 ./scripts/build.sh
